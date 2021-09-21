@@ -20,21 +20,32 @@ const person = new Person({
     date: new Date(),
 })
 
-const getEntries = () => {
+exports.getEntries = () => {
     Person.find({}).then((result) => {
         return [...result]
     })
 }
 
-const createEntry = (newEntry, done) => {
-    person
-        .save((err) => {
-            if (err) return console.error(err)
-        })
-        .then((result) => {
-            console.log("Entry saved")
-            mongoose.connection.close()
-        })
+exports.createEntry = (newEntry) => {
+    Person.save(newEntry).then((result) => {
+        console.log("Entry saved")
+        mongoose.connection.close()
+    })
 }
 
-const deleteEntry = (entryId, done) => {}
+exports.deleteEntry = (entryName) => {
+    Person.find({ name: entryName }).then((result) => {
+        console.log("Result Found: ", result.name, result.number)
+        !result
+            ? console.log("Error: No records found that match query")
+            : Person.deleteOne({ name: result.name }).then((response) => {
+                  console.log("Deleted Entry:", result.name)
+              })
+    })
+}
+
+exports.updateEntry = (entryName, newNumber) => {
+    Person.updateOne({ name: entryName }, { number: newNumber }).then((result) => {
+        console.log("Updated Number for", entryName, " to:", result.number)
+    })
+}

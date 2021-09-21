@@ -4,8 +4,8 @@ const morgan = require("morgan")
 const mongoose = require("mongoose")
 require("dotenv").config()
 const app = express()
-
-const mongoUrl = process.env["MONGO_URI"]
+const mongoFun = require("./mongoFun.js")
+//const mongoUrl = process.env["MONGO_URI"]
 
 app.use(express.json())
 app.use(cors())
