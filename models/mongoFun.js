@@ -4,17 +4,17 @@ const uniqueValidator = require("mongoose-unique-validator")
 const mongoUrl = process.env["MONGO_URI"]
 mongoose.connect(mongoUrl)
 
-const minDigits = /(.*\d.*){8,}/g
-const validator = (tel) => minDigits.test(tel)
+//const minDigits = new RegExp(/(.*\d.*){8,}/, 'g')
+//const validator = (tel) => minDigits.test(tel)
 
 const phoneSchema = new mongoose.Schema({
     name: { type: String, unique: true, required: true, minlength: 3 },
     number: {
         type: String,
-        validate: [
-            validator,
-            `Telephone number is not valid. Requires at least 8 digits`,
-        ],
+        validate: {
+            validator: function(tel) { return /(.*\d.*){8,}/g.test(tel); },
+            message: `Telephone number is not valid. Requires at least 8 digits`,
+    },
         required: [true, "Please enter a 8 digit phone number"],
     },
     date: Date,
