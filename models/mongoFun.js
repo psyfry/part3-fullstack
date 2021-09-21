@@ -2,9 +2,9 @@ const mongoose = require("mongoose")
 require("dotenv").config()
 const uniqueValidator = require("mongoose-unique-validator")
 const mongoUrl = process.env["MONGO_URI"]
-
 mongoose.connect(mongoUrl)
-const minDigits = new RegExp(/(\d.*){8,}/, 'g')
+
+const minDigits = /(.*\d.*){8,}/g
 const validator = (tel) => minDigits.test(tel)
 
 const phoneSchema = new mongoose.Schema({
