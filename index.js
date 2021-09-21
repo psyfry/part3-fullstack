@@ -32,51 +32,57 @@ app.use(
     morgan(":method :url :status :res[content-length] - :response-time ms :post-log")
 )
 
-app.get("/info", (req, res) => {
-    res.send(
-        `Phonebook contains info from ${persons.length} people \n
+app.get("/info", (req, res, next) => {
+    Person.countDocuments()
+        .lean()
+        .then((result) => {
+            res.send(
+                `Phonebook contains info from ${result} people \n
          ${new Date()}`
-    )
+            )
+        })
+        .catch((error) => next(error))
 })
 
-app.get("/api/persons", (req, res) => {
+app.get("/api/persons", (req, res, next) => {
     Person.find({})
         .then((result) => {
             console.log(result)
             res.json(result)
         })
+        .catch((error) => next(error))
+})
+
+app.get("/api/persons/:id", (req, res, next) => {
+    Person.findById(req.params.id)
+        .then((person) => {
+            if (person) {
+                res.json(person)
+            } else {
+                res.status(404).end()
+            }
+        })
         .catch((error) => {
-            console.error(error.message)
+            console.log(error)
+            next(error)
         })
 })
 
-app.get("/api/persons/:id", (req, res) => {
-    const id = Number(req.params.id)
-    const person = persons.find((x) => x.id === id)
-    !person ? res.status(400).end() : res.json(person)
+app.delete("/api/persons/:id", (req, res, next) => {
+    Person.findByIdAndRemove(req.params.id)
+        .then((result) => {
+            console.log("Record Deleted:", result)
+            res.status(204).end()
+        })
+        .catch((error) => next(error))
 })
 
-app.delete("/api/persons/:id", (req, res) => {
-    Person.findById(req.params.id).then((result) => {
-        console.log("Result Found: ", result.name, result.number)
-        !result
-            ? res.status(400).end()
-            : Person.deleteOne({ name: result.name }).then((deletedEntry) => {
-                  console.log("Deleted Entry:", deletedEntry.name)
-                  res.status(204).end()
-              })
-    })
-})
-
-app.post("/api/persons", (req, res) => {
+app.post("/api/persons", (req, res, next) => {
     const body = req.body
-    //const dupeCheck = persons.some((x) => x.name === body.name)
-    //console.log(dupeCheck)
 
     if (!body.name || !body.number) {
-        return res.status(400).json({ "error": "Name must be unique" })
+        return res.status(400).json({ "error": "Missing required field" })
     }
-
     const person = new Person({
         name: body.name,
         number: body.number,
@@ -87,20 +93,39 @@ app.post("/api/persons", (req, res) => {
         .then((result) => {
             console.log("Entry saved")
             res.json(result)
-            //mongoose.connection.close()
         })
         .catch((error) => {
             res.status(400).json({
                 "error": "Name must be unique",
                 "message": error.message,
             })
+            next(error)
         })
 })
 
-/* app.put("/api/persons/:id", (req, res) => {
-    const id = Number(req.params.id)
-    res.send(`Feature not implemented yet. request ID: ${id}`)
-})*/
+app.put("/api/persons/:id", (req, res, next) => {
+    const updatedPerson = {
+        number: req.body.number,
+    }
+    Person.findByIdAndUpdate(req.params.id, updatedPerson, { new: true })
+        .then((result) => {
+            console.log("PUT Result: ", result)
+            res.json(result)
+        })
+        .catch((error) => next(error))
+})
+
+const errorHandler = (error, req, res, next) => {
+    console.error("Error Handler: ", error.message)
+
+    if (error.name === "CastError") {
+        return res.status(400).send({ error: "malformatted id" })
+    }
+
+    next(error)
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT)

@@ -20,18 +20,3 @@ phoneSchema.set("toJSON", {
 })
 
 module.exports = mongoose.model("Person", phoneSchema)
-
-/* const person = new Person({
-    name: body.name,
-    number: body.number,
-    id: generateId(),
-    date: new Date(),
-})
-
-
-updateEntry = (entryName, newNumber) => {
-    Person.updateOne({ name: entryName }, { number: newNumber }).then((result) => {
-        console.log("Updated Number for", entryName, " to:", result.number)
-    })
-}
-*/
