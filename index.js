@@ -1,11 +1,9 @@
 const express = require("express")
 const cors = require("cors")
 const morgan = require("morgan")
-const mongoose = require("mongoose")
-//require("dotenv").config()
 const app = express()
 const Person = require("./models/mongoFun.js")
-//console.log("mongoFun.getEntries Test", getEntries())
+
 app.use(express.json())
 app.use(cors())
 app.use(express.static("build"))
@@ -15,10 +13,10 @@ let persons = Person.find({}).then((result) => {
     return result
 })
 
-const generateId = () => {
+/* const generateId = () => {
     const maxId = Math.max(...persons.map((p) => p.id))
     return maxId + 1
-}
+} */
 
 morgan.token("post-log", function logPostBody(req) {
     if (req.method === "POST") {
@@ -94,20 +92,14 @@ app.post("/api/persons", (req, res, next) => {
             console.log("Entry saved")
             res.json(result)
         })
-        .catch((error) => {
-            res.status(400).json({
-                "error": "Name must be unique",
-                "message": error.message,
-            })
-            next(error)
-        })
+        .catch((error) => next(error))
 })
 
 app.put("/api/persons/:id", (req, res, next) => {
     const updatedPerson = {
         number: req.body.number,
     }
-    Person.findByIdAndUpdate(req.params.id, updatedPerson, { new: true })
+    Person.findByIdAndUpdate(req.params.id, updatedPerson, { new: true, runValidators:true })
         .then((result) => {
             console.log("PUT Result: ", result)
             res.json(result)
@@ -120,6 +112,8 @@ const errorHandler = (error, req, res, next) => {
 
     if (error.name === "CastError") {
         return res.status(400).send({ error: "malformatted id" })
+    } else if (error.name === "ValidationError") {
+        return res.status(400).send({ error: error.message })
     }
 
     next(error)
