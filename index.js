@@ -1,13 +1,17 @@
 const express = require("express")
 const cors = require("cors")
 const morgan = require("morgan")
+const mongoose = require("mongoose")
+require("dotenv").config()
 const app = express()
+
+const mongoUrl = process.env["MONGO_URI"]
 
 app.use(express.json())
 app.use(cors())
 app.use(express.static("build"))
 
-let persons = [
+/*let persons = [
     {
         "id": 1,
         "name": "Arto Hellas",
@@ -29,6 +33,9 @@ let persons = [
         "number": "39-23-6423122",
     },
 ]
+*/
+
+let persons = getEntries()
 
 const generateId = () => {
     const maxId = Math.max(...persons.map((p) => p.id))
